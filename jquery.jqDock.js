@@ -1,12 +1,12 @@
-/** @preserve jquery.jqDock.js v1.8
+/** @preserve jquery.jqDock.js v1.9
  */
 /*global jQuery, window:false, Image:false*/
-/*jslint white:false, regexp:false, plusplus:false, strict:false, forin:true, indent:0 */
+/*jslint white:true, regexp:true, plusplus:true, sloppy:true, forin:true, unparam:true*/
 /**
  * jqDock jQuery plugin
- * Version : 1.8
+ * Version : 1.9
  * Author : Roger Barrett
- * Date : February 2011
+ * Date : June 2011
  *
  * Inspired by:
  *   iconDock jQuery plugin
@@ -23,6 +23,12 @@
  * http://www.gnu.org/licenses/gpl.html
  *
  * Change Log :
+ * v1.9
+ *    - bugfix : in Chrome, jquery v1.2.x appears not to hide() elements that are not yet attached to the DOM
+ *    - allowed for a boolean false to be specified for the onReady, onSleep and onWake options, that then provides a function that always and only returns false
+ *    - added handling for an HTML5 data-jqdock attribute (as an object) on the menu element, eg. data-jqdock='{"align":"top","size":80,"onReady":false}'; NB: requires jQuery v1.4.3 or later!
+ *    - made jqDock caseless, eg. $.jqdock == $.jqDock, and $.fn.jqdock() == $.fn.jqDock(), so either can be used
+ *    - changed some for(...) loops into while(...) loops to keep jslint happy
  * v1.8
  *    - bugfix : both v1.5 & v1.7 tried to fix the problem of clicking on labels, first by adding return false; to the LABEL_CLICK handler, then by removing it; this time I've switched the trigger() for triggerHandler(), to prevent the event bubbling up the DOM
  *    - move the assignment of a label's click handler such that it is now bound regardless of whether labels are enabled
@@ -117,6 +123,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 		, DOCKS = []
 		, XY = [0, 0] //mouse position from left, mouse position from top
 		, EMPTYFUNC = function(){}
+// v1.9 : added; simply returns false, primarily for use by on___ option hooks, eg. data-jqdock='{"onReady":false}'
+		, FALSEFUNC = function(){ return false; }
 /** returns integer numeric of leading digits in string argument
  * @private
  * @param {string} x String representation of an integer
@@ -134,7 +142,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  */
 		, CLEAR_TIMER = function(Dock, x){
 				var y = TIMERS[x] ? x + 1 : TIMERS.length;
-				for( ; x < y && y--; ){
+				while(x < y && y--){
 					if(Dock[TIMERS[y]]){
 						window.clearTimeout(Dock[TIMERS[y]]);
 						Dock[TIMERS[y]] = null;
@@ -147,7 +155,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  * @return {integer} Dock index, -1 if not found
  */
 		, DOCK_INDEX_FROM_ID = function(el){
-				return el ? ONE * ( (el.id || '').match(/^jqDock(\d+)$/) || [0,-1] )[1] : -1;
+				var rtn = el && el.id ? el.id.match(/^jqDock(\d+)$/) : 0;
+				return rtn ? ONE * rtn[1] : -1;
 			}
 //v1.6 : moved this out of initDock (used to be var callback) and corrected typo (Dock.Asleep instead of Dock.Sleep!)...
 /** from an initial fade-in of a menu, this clears filters (for IE) and notifies readiness
@@ -335,12 +344,11 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 				var VH = VERTHORZ[Dock.Opts.vh] //convenience
 					, numElems = Dock.Elem.length
 					, rtn = -1
-					, i = 0
-					, el, padding, majorWidth
+					, i, el, padding, majorWidth
 						//distance into the menu from the leading edge of first element in menu...
 					, offset = XY[VH.xy] - Dock.Elem[0].Wrap.parent().offset()[VH.tl];
 				if(offset >= 0){
-					for( ; rtn < 0 && i < numElems; i++){
+					for(i = 0 ; rtn < 0 && i < numElems; i++){
 						el = Dock.Elem[i];
 						padding = el.Pad[VH.lead] + el.Pad[VH.trail];
 						majorWidth = el.Major + padding;
@@ -430,7 +438,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 
 				//create the label's *outer* container (div.jqDockLabel) and hide it...
 				label.el = $('<div class="jqDockLabel jqDockLabel' + item.Link + '" style="position:absolute;margin:0;"></div>')
-					.hide().insertAfter(item.Img) //insert after the image element
+//v1.9 : hide the label *after* insertion, because jquery v1.2.x does not hide unattached elements in Chrome...
+					.insertAfter(item.Img).hide() //insert after the image element
 //v1.8 : assign the click handler here, regardless of whether labels are enabled or not...
 					.click(LABEL_CLICK); //NB: the click handler does NOT (as of v1.7) return false!
 					//Note that the click handler is on div.jqDockLabel, not div.jqDockLabelText! This should mean that
@@ -469,7 +478,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 					, el, ab, newFinal, oscillate;
 				//if not forced, use current translated cursor position (main axis)...
 				relxy = relxy || relxy === 0 ? relxy : RELATIVE_XY(Dock);
-				for( ; i--; ){
+				while(i--){
 					el = Dock.Elem[i];
 					newFinal = el.Initial;
 					if(relxy >= 0){
@@ -590,8 +599,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 					, op = Dock.Opts //convenience
 					, VH = VERTHORZ[op.vh]
 					, lapse = op.duration + op.step
-					, i = 0 //must go through the elements in logical order
-					, el, sz, stepsLeft;
+					, i, el, sz, stepsLeft;
 				if(Dock.Stamp){
 					lapse = GET_TIME() - Dock.Stamp;
 					//there's no point continually checking Date once op.duration has passed...
@@ -601,7 +609,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 				}
 				if(lapse >= op.step){ //only if Opts.step ms have passed since last mouseenter/leave
 					stepsLeft = (op.duration - lapse) / op.step;
-					for( ; i < Dock.Elem.length; i++){
+					for(i = 0 ; i < Dock.Elem.length; i++){ //must go through the elements in logical order
 						el = Dock.Elem[i];
 						sz = el.Final - el.Major;
 						sz = (sz && stepsLeft > 1) ? el.Major + Math[sz < 0 ? 'floor' : 'ceil'](sz / stepsLeft) : el.Final;
@@ -627,7 +635,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 				CLEAR_TIMER(Dock, 2); //Indock
 				if(Dock.OnDock && !Dock.Stamp){
 					SET_SIZES(id, relxy);
-					for( ; i && el[i - 1].Major === el[i - 1].Final; ){ --i; }
+					while(i && el[i - 1].Major === el[i - 1].Final){ --i; }
 					if(!i){
 						LABEL_SHOW(Dock, 1); //show
 					}else{
@@ -650,14 +658,15 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 					, i = el.length
 					;
 				if(!Dock.OnDock){
-					for( ; i && el[i - 1].Major <= el[i - 1].Initial; ){ --i; }
+					while(i && el[i - 1].Major <= el[i - 1].Initial){ --i; }
 					//this is here for no other reason than that early versions of Opera seem to leave 
 					//a 'shadow' residue of the expanded image unless/until this function is called!...
 					RELATIVE_XY(Dock);
 					if(!i){ //complete
 						//reset everything back to 'at rest' state...
 						Dock.Stamp = 0;
-						for(i = el.length; i--; ){
+						i = el.length;
+						while(i--){
 							el[i].Major = el[i].Final = el[i].Initial;
 						}
 						Dock.Current = -1;
@@ -683,7 +692,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 					, i = el.length;
 				if(Dock.OnDock){
 					SET_SIZES(id, relxy);
-					for( ; i && el[i - 1].Major === el[i - 1].Final; ){ --i; }
+					while(i && el[i - 1].Major === el[i - 1].Final){ --i; }
 					if(!i || !Dock.Stamp){ //complete, or beyond 'duration'
 						Dock.Stamp = 0;
 						IN_DOCK(id, relxy);
@@ -820,9 +829,12 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						param = Dock.Frozen ? 'thaw' : 'wake';
 						//if Asleep, check for onWake returning a false - to stay asleep - and
 						//trigger a dockwake event if not still asleep...
-						if(Dock.Asleep && !(Dock.Asleep = (Dock.Opts.onWake.call(this, param) === false))){
-							//always clear frozen...
-							Dock.Frozen = !$(this).trigger('dockwake', [param]);
+						if(Dock.Asleep){
+							Dock.Asleep = Dock.Opts.onWake.call(this, param) === false;
+							if(!Dock.Asleep){
+								//always clear frozen...
+								Dock.Frozen = !$(this).trigger('dockwake', [param]);
+							}
 						}
 						if(!Dock.Asleep){
 							//start (or reset) idling now...
@@ -867,9 +879,10 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  * @private
  * @return {object}
  */
-	$.jqDock = (function(){
+// v1.9 : include $.jqdock (lower case!)...
+	$.jqdock = $.jqDock = (function(){
 		return {
-				version : 1.8
+				version : 1.9
 			, defaults : { //can be set at runtime, per menu
 					size : 48 //[px] maximum minor axis dimension of image (width or height depending on 'align' : vertical menu = width, horizontal = height)
 				, distance : 72 //[px] attenuation distance from cursor
@@ -1000,7 +1013,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 							SET_SIZES(id, el[k]);
 							//tally image widths/heights (plus padding)...
 							acc = 0; //accumulator for main axis image dimensions
-							for(j = numItems; j--; ){
+							j = numItems;
+							while(j--){
 								//note that Final is an image dimension (in main axis) and does not include any user padding...
 								acc += Dock.Elem[j].Final + upad;
 							}
@@ -1020,18 +1034,20 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						].join('');
 					Dock.Yard = $('div.jqDock', Dock.Menu.wrapInner(wrap));
 					//now that we have div.jqDock, let's see if the user has applied any css border styling to it...
-					for(j = 4; j--; ){
+					j = 4;
+					while(j--){
 						borders[j] = AS_INTEGER(Dock.Yard.css('border' + TRBL[j] + 'Width'));
 					}
 					Dock.Yard.parent().addClass('jqDockWrap')
 						.width(Dock.width + borders[1] + borders[3]) //Right and Left
 						.height(Dock.height + borders[0] + borders[2]); //Top and Bottom
 					//shrink all images down to 'at rest' size, and add appropriate identifying class...
-					for( ; i < numItems; i++){
+					while(i < numItems){
 						el = Dock.Elem[i];
 						//apply the image's user-applied padding to the outer element wrapper...
 						upad = el.Wrap.parent();
-						for(j = 4; j--; ){
+						j = 4;
+						while(j--){
 							if(el.Pad[j]){
 								upad.css('padding' + TRBL[j], el.Pad[j]);
 							}
@@ -1040,7 +1056,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						//give a mouse class to both the image and the outer element wrapper (to handle any user padding)...
 						upad.add(el.Img).addClass('jqDockMouse'+i);
 						//create and append the label
-						SET_LABEL(Dock, el, i);
+						SET_LABEL(Dock, el, i++);
 					}
 					//bind dock listener events to the original menu element...
 					el = Dock.Menu.bind(CUSTOMEVENTS.join(' '), LISTENER);
@@ -1073,7 +1089,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 
 					//show the menu now?...
 					//if onReady returns false then the dock goes to sleep and will require a 'nudge' at some point to wake it up
-					if(!(Dock.Asleep = (op.onReady.call(Dock.Menu[0], 'ready') === false))){
+					Dock.Asleep = op.onReady.call(Dock.Menu[0], 'ready') === false;
+					if(!Dock.Asleep){
 						if(fadeLayer){
 							//can only be 1 of menu/wrap/dock, and el is already set to Dock.Menu...
 							if(fadeLayer !== 'menu'){ //either dock or wrap...
@@ -1108,7 +1125,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 		}()); //run the function to set up $.jqDock
 
 	/***************************************************************************************************
-	*  jQuery.fn.jqDock()
+	*  jQuery.fn.jqDock()  and, as of v1.9, jQuery.fn.jqdock()
 	*  ==================
 	* STANDARD
 	* usage:      $(selector).jqDock(options);
@@ -1155,7 +1172,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 	* hence the code below, and in $.jqDock.initDock(), sets up and stores everything it possibly can
 	* which will reduce processing at runtime, and hopefully give as smooth animation as possible.
 	***************************************************************************************************/
-	$.fn.jqDock = function(opts){
+// v1.9 : include $.fn.jqdock (lower case!)...
+	$.fn.jqdock = $.fn.jqDock = function(opts){
 		/***************************************************************************************************
 		* ALTERNATE2:
 		* Accepts 'nudge', 'idle' or 'freeze'. Chainable.
@@ -1187,13 +1205,14 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						//clear any timers...
 						CLEAR_TIMER(Dock, -1);
 						//remove all the mouse and custom events...
-						for( ; i--; ){
+						while(i--){
 							Dock.Yard.unbind(MOUSEEVENTS[i], MOUSE_HANDLER);
 						}
 						//only remove the custom events that jqDock was listening for; if the calling
 						//script bound listeners for the other custom events (show/sleep/wake) then it
 						//is the calling script's responsibility to remove them (or not) as it wishes
-						for(i = CUSTOMEVENTS.length; i--; ){
+						i = CUSTOMEVENTS.length;
+						while(i--){
 							Dock.Menu.unbind(CUSTOMEVENTS[i], LISTENER);
 						}
 						for(i = 0; i < Dock.Elem.length; i++){
@@ -1230,7 +1249,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						}
 						Dock = DOCKS[dockId] = null;
 					}
-					for(dockId = DOCKS.length; dockId && DOCKS[dockId - 1] === null; ){ --dockId; }
+					dockId = DOCKS.length;
+					while(dockId && DOCKS[dockId - 1] === null){ --dockId; }
 					if(!dockId){
 						DOCKS = [];
 					}
@@ -1344,7 +1364,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						, height : 0 //height of div.jqDock container
 						, Spread : 0 //main axis dimension (horizontal = width, vertical = height)
 						, Border : [] //border widths on div.jqDock, indexed as per TRBL
-						, Opts : $.extend({}, $.jqDock.defaults, opts||{}, $.metadata ? Self.metadata() : {}) //options; support metadata plugin
+//v1.9 : support data-jqdock...
+						, Opts : $.extend({}, $.jqDock.defaults, opts||{}, $.metadata ? Self.metadata() : {}, Self.data('jqdock')) //options; support metadata plugin
 						, Current : -1 //current image index
 						, Load : 0 //count of images to load
 						, ToFro : [ //a pain, but needed to prevent possible oscillation around a stationary cursor on the dock (see SET_SIZES)...
@@ -1385,12 +1406,17 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						}
 						op.bias = i;
 					}
-					op.labels = (/^[tmb][lcr]$/).test(op.labels.toString()) ? op.labels : ( op.labels ? {top:'br',left:'tr'}[op.align] || 'tl' : '' );
-					op.setLabel = !!op.setLabel ? op.setLabel : TRANSFORM_LABEL;
+					if(!(/^[tmb][lcr]$/).test(op.labels.toString())){
+						op.labels = op.labels ? {top:'br',left:'tr'}[op.align] || 'tl' : '';
+					}
+					if(!op.setLabel){
+						op.setLabel = TRANSFORM_LABEL;
+					}
 					op.fadeLayer = op.fadeIn ? (({dock:1,wrap:1}[op.fadeLayer]) ? op.fadeLayer : 'menu') : '';
-					for(i in {onSleep:1, onWake:1, onReady:1, onFreeze:1}){
+// v1.9 : removed check for onFreeze (which has never been an option!) and added checks for ===false...
+					for(i in {onSleep:1, onWake:1, onReady:1}){
 						if(!op[i]){
-							op[i] = EMPTYFUNC;
+							op[i] = op[i] === false ? FALSEFUNC : EMPTYFUNC;
 						}
 					}
 					mc = (/^m|c$/).test(op.labels); //indicates the need for middle/centre label positioning information to be gathered
@@ -1444,7 +1470,8 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 								, Wrap : 0 //jQuery of the menu element's immediate parent wrapper
 */
 								};
-							for(i = 4; i--;){
+							i = 4;
+							while(i--){
 								Dock.Elem[n].Pad[i] = AS_INTEGER(jself.css('padding' + TRBL[i]));
 							}
 						});
