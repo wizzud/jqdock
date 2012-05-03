@@ -1,8 +1,8 @@
-/** @preserve jquery.jqdock.js v2.0.0, by Wizzud
+/** @preserve jquery.jqdock.js v2.0.1, by Wizzud
  */
 /**
  * jqdock jQuery plugin
- * Version : 2.0.0
+ * Version : 2.0.1
  * Author : Roger Barrett
  * Date : Dec 2011
  *
@@ -21,6 +21,8 @@
  * http://www.gnu.org/licenses/gpl.html
  *
  * Change Log :
+ * v2.0.1
+ *    - bugfix : the noAntiFlutter option (introduced in v2.0.0) was being applied in reverse! ie. you had to set noAntiFlutter ON in order to run the anti-flutter code! Now fixed to work as documented/intended!
  * v2.0.0
  *    - IMPORTANT! : Requires jQuery v1.7+
  *    - versioning changed to major.minor.patch - with this being a major release - in order to meet jQuery's new requirements for plugins
@@ -472,7 +474,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 						//back by a pixel, which changes the relative position within the dock, which changes... etc, etc, etc!
 						//it doesn't happen very often but it does happen!
 						if(i === Dock.Current){
-							if(op.noAntiFlutter){
+							if(!op.noAntiFlutter){
 								oscillate = [XY[VERTHORZ[op.vh].xy], Dock.Current, newFinal].join(',');
 								if(oscillate === Dock.ToFro[0] && newFinal !== Dock.ToFro[2]){
 									newFinal = Dock.ToFro[2];
@@ -893,7 +895,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  */
 	$.jqdock = $.jqDock = (function(){
 		return {
-			version : '2.0.0',
+			version : '2.0.1',
 			defaults : {          //can be set at runtime, per menu
 				size : 48,          //[px] maximum minor axis dimension (when at rest) of image (width or height depending on 'align' : vertical menu = width, horizontal = height)
 				sizeMax : 0,        //[px] maximum minor axis dimension of a fully-expanded image (width or height depending on 'align' : vertical menu = width, horizontal = height)
