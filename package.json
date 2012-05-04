@@ -1,0 +1,36 @@
+{
+    "name": "jqdock",
+	"version": "2.0.1",
+	"title": "jQuery Dock Menu",
+	"author": {
+		"name": "Roger Barrett",
+		"url": "http://www.wizzud.com"
+	},
+	"licenses": [
+		{
+			"type": "MIT",
+			"url" : "http://www.opensource.org/licenses/MIT"
+		},
+		{
+			"type": "GPLv2",
+			"url": "http://www.opensource.org/licenses/GPL-2.0"
+		}
+	],
+	"dependencies": {
+		"jquery": ">=1.7.0"
+	},
+	"description": "jqDock is a jQuery plugin that transforms images into a Mac-like Dock menu, with icons that expand on rollover. Configuration allows for : horizontal or vertical alignment, with proportional image expansion from an edge or mid point; positioned labels; different small and large images; size and sensitivity adjustment; initial expansion, instant freeze, inactivity timeouts, and wake-up calls; and more!",
+	"keywords": [
+		"dock",
+		"menu",
+		"navigate",
+		"animate"
+	],
+	"homepage": "https://github.com/jquery-jqdock",
+	"docs": "http://www.wizzud.com/jqdock/",
+	"demo": "http://www.wizzud.com/jqdock/examples/",
+	"files": [
+		"jquery.jqdock.js",
+		"jquery.jqdock.min.js"
+	]
+}
