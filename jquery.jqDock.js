@@ -1,8 +1,8 @@
-/** @preserve jquery.jqdock.js v2.0.1, by Wizzud
+/** @preserve jquery.jqdock.js v2.0.2, by Wizzud
  */
 /**
  * jqdock jQuery plugin
- * Version : 2.0.1
+ * Version : 2.0.2
  * Author : Roger Barrett
  * Date : Dec 2011
  *
@@ -21,6 +21,9 @@
  * http://www.gnu.org/licenses/gpl.html
  *
  * Change Log :
+ * v2.0.2
+ *    - added permanentLabels switch option (off by default) which keeps the labels (if enabled) on permanent display
+ *    - fixed for jQuery v1.9, which no longer supports $.browser
  * v2.0.1
  *    - bugfix : the noAntiFlutter option (introduced in v2.0.0) was being applied in reverse! ie. you had to set noAntiFlutter ON in order to run the anti-flutter code! Now fixed to work as documented/intended!
  * v2.0.0
@@ -371,7 +374,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  */
 			LABEL_SHOW = function(Dock, show){
 				var item = Dock.Elem[Dock.Current];
-				if(item && Dock.Opts.labels){
+				if(item && Dock.Opts.labels && !Dock.Opts.permanentLabels){
 					item.Label.el.toggle(!!show);
 				}
 			},
@@ -895,7 +898,7 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
  */
 	$.jqdock = $.jqDock = (function(){
 		return {
-			version : '2.0.1',
+			version : '2.0.2',
 			defaults : {          //can be set at runtime, per menu
 				size : 48,          //[px] maximum minor axis dimension (when at rest) of image (width or height depending on 'align' : vertical menu = width, horizontal = height)
 				sizeMax : 0,        //[px] maximum minor axis dimension of a fully-expanded image (width or height depending on 'align' : vertical menu = width, horizontal = height)
@@ -941,10 +944,11 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 														//  expansion, providing a biased expansion instead of 50/50 from the mid-point
 														//  NB: align:middle,bias:0 === align:top, and align:middle,bias:100 === align:bottom
 														//  and vertically, align:center,bias:0 === align:left, and align:center,bias:100 === align:right
-				noAntiFlutter : 0   //allows disabling/bypassing of the oscillation checking in SET_SIZES()
+				noAntiFlutter : 0,  //allows disabling/bypassing of the oscillation checking in SET_SIZES()
+				permanentLabels : 0 //keeps enabled labels on permanent display
 			},
 			nextId : 0,           //the id for the next Dock to be constructed
-			useJqLoader : $.browser.opera || $.browser.safari, //use jQuery method for loading images, rather than "new Image()" method
+			useJqLoader : !$.browser || $.browser.opera || $.browser.safari, //use jQuery method for loading images, rather than "new Image()" method
 
 /** once all images have been loaded (IMAGE_ONLOAD), it completes the setup of the dock menu
  *  note: unless all images get loaded, this won't get called and the menu will stay hidden!
@@ -1128,6 +1132,10 @@ if(!$.jqDock){ //can't see why it should be, but it doesn't hurt to check
 					if(labelText !== false){
 						//if there is label content (as an HTML string!) then insert it with the inner container...
 						$('<div/>').addClass(CLASSES[3] + 'Text').html(labelText.toString()).appendTo(label.el);
+					}
+					//if permanentLabels is set, show the label...
+					if(labels && op.permanentLabels){
+						label.el.show();
 					}
 					//end of label creation
 					//=====================
