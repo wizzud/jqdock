@@ -1,5 +1,0 @@
-bower jquery#*                  cached git://github.com/jquery/jquery.git#2.1.4
-bower jquery#*                validate 2.1.4 against git://github.com/jquery/jquery.git#*
-bower jquery#~2.1.4            install jquery#2.1.4
-
-jquery#2.1.4 bower_components/jquery
