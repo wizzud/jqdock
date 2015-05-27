@@ -1,7 +1,10 @@
 {
   "name": "jQuery Dock Menu",
   "version": "2.0.2",
-  "main": "jquery.jqDock.js",
+  "main": [
+    "jquery.jqDock.js",
+    "jquery.jqDock.min.js"
+  ],
   "homepage": "http://www.wizzud.com/jqDock/",
   "authors": [
     "Roger Barrett <rb@wizzud.com>"
