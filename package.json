@@ -1,0 +1,24 @@
+{
+  "name": "jdock",
+  "version": "2.0.2",
+  "description": "---",
+  "main": "jquery.jqDock.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rbecheras/jqdock.git"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/rbecheras/jqdock/issues"
+  },
+  "homepage": "https://github.com/rbecheras/jqdock",
+  "devDependencies": {
+    "grunt-contrib-uglify": "~0.9.1",
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-contrib-jshint": "~0.11.2"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "jQuery Dock Menu",
+  "version": "2.0.2",
+  "main": "jquery.jqDock.js",
+  "homepage": "http://www.wizzud.com/jqDock/",
+  "authors": [
+    "Roger Barrett <rb@wizzud.com>"
+  ],
+  "description": "A jQuery plugin to transform a set of images into a Mac-like Dock menu, horizontal or vertical, with icons that expand on rollover!",
+  "keywords": [
+    "jquery",
+    "plugin",
+    "MacOS",
+    "Dock-bar"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": ">=1.7.0"
+  }
+}
